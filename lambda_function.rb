@@ -17,6 +17,11 @@ def lambda_handler(event:, context:)
         return { statusCode: 400, body: JSON.generate("invalid url") }
     end
 
+    previewre = Regexp.new('^https://blog\.3qe\.us/preview$')
+    if previewre.match?(url)
+        return { statusCode: 400, body: JSON.generate("invalid url") }
+    end
+
     params = {
         table_name: TABLE_NAME,
         key: {
