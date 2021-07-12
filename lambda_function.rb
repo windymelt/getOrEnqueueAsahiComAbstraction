@@ -34,7 +34,9 @@ def lambda_handler(event:, context:)
         if result.item == nil
             puts 'Could not find url'
             # enqueue
-            new_status(dynamodb: dynamodb, url: url, status: "enqueued")
+            now = Time.now
+            ttl = now.to_i + 60*60*24
+            new_status(dynamodb: dynamodb, url: url, status: "enqueued", ttl: ttl)
             enqueue_to_sqs(sqs: sqs, url: url)
             return { statusCode: 200, body: JSON.generate({abstract: "<Preparing abstract>"}) }
         end
@@ -56,12 +58,13 @@ def lambda_handler(event:, context:)
     { statusCode: 400, body: JSON.generate({abstract: "unknown request"}) }
 end
 
-def new_status(dynamodb:, url:, status:)
+def new_status(dynamodb:, url:, status:, ttl:)
     params = {
         table_name: TABLE_NAME,
         item: {
             url: url,
-            status: status
+            status: status,
+            expire: ttl
         }
     }
     begin
